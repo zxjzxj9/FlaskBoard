@@ -1,0 +1,133 @@
+<!DOCTYPE HTML>
+<html lang="zh_cn">
+    <head>
+        <title> Welcome to Theoretical Lab! </title>
+        <meta charset="utf-8">
+
+        <meta http-equiv="X-UA-Compatible" content="IE=edge">
+
+        <meta name="viewport" content="width=device-width, initial-scale=1">
+
+        <!-- Latest compiled and minified CSS -->
+        <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/css/bootstrap.min.css" integrity="sha384-BVYiiSIFeK1dGmJRAkycuHAHRg32OmUcww7on3RYdg4Va+PmSTsz/K68vbdEjh4u" crossorigin="anonymous">
+
+        <!-- Optional theme -->
+        <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/css/bootstrap-theme.min.css" integrity="sha384-rHyoN1iRsVXV4nD0JutlnGaslCJuC7uwjduW9SVrLvRYooPp2bWYgmgJQIXwl/Sp" crossorigin="anonymous">
+
+        <!-- jQuery addon -->
+        <script src="https://code.jquery.com/jquery-3.1.1.slim.min.js" integrity="sha256-/SIrNqv8h6QGKDuNoLGA4iret+kyesCkHGzVUUV0shc=" crossorigin="anonymous"></script>
+
+        <!-- Latest compiled and minified JavaScript -->
+        <script src="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/js/bootstrap.min.js" integrity="sha384-Tc5IQib027qvyjSMfHjOMaLkfuWVxZxUPnCJA7l2mCWNIpG9mGCD8wGNIcPD7Txa" crossorigin="anonymous"></script>
+
+
+    </head>
+
+    <body>
+
+        <nav class="navbar navbar-inverse navbar-fixed-top">
+            
+            <div class="container">
+                <div class="navbar-header">
+                    <a class="navbar-brand" href="#">Theoretical Chemistry Lab</a>
+                    <ul class="nav navbar-nav">
+                        <li><a href="/">首页</a></li>
+                        <li><a href="/">视频</a></li>
+                        <li><a href="/forum">论坛</a></li>
+                        <li><a href="/">关于</a></li>
+                    </ul>
+                </div>
+                
+                {% if session.logged_in %}
+                    <div class="navbar-form navbar-right">
+                        <form action="/logout" method="POST" class="form-group">
+                            <button class="btn btn-info" type="submit">注销</button>
+                        </form>
+                    </div>
+                    <p class="navbar-text navbar-right"> 欢迎, {{ session.username }}！ </p>
+                {% else %}
+                    <div class="navbar-form navbar-right">
+                        <button class="btn btn-success" data-toggle="modal" data-target="#loginDialog">登录</button>
+                        <button class="btn btn-primary" onClick="toRegister()">注册</button>
+                    </div>
+                    <p class="navbar-text navbar-right"> 欢迎！ </p>
+                {% endif %}
+            </div>
+
+        </nav>
+
+
+        <div class="modal fade" id="loginDialog" role="dialog">
+            <div class="modal-dialog modal-sm">
+                <div class="modal-content">
+                    <form onsubmit="return simuReq();" class="form-horizontal" method="POST">
+                        <div class="modal-header" id="status">
+                            
+                        </div>
+
+                        <div class="modal-body">
+
+                        <div class="form-group">
+                            <label for="uname" class="form-control-label col-sm-4">用户名</label>
+                            <div class="col-sm-8">
+                                <input type="text" class="form-control" id="uname" name="username">
+                            </div>
+                        </div>
+
+                        <div class="form-group">
+                            <label for="passwd" class="form-control-label col-sm-4">密码</label>
+                            <div class="col-sm-8">
+                                <input type="password" class="form-control" id="passwd" name="password">
+                            </div>
+                        </div>
+                        </div>
+
+                        <div class="modal-footer">
+                            <button type="button" class="btn btn-secondary" data-dismiss="modal">关闭</button>
+                            <button type="submit" class="btn btn-primary">登录</button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+
+    </body>
+
+    <script type="text/javascript">
+        function simuReq(){
+            //alert("test!");
+            //console.log(form);
+            uname = document.getElementById("uname").value;
+            passwd = document.getElementById("passwd").value;
+            //console.log(uname);
+            //console.log(passwd);
+            var xmlhttp = new XMLHttpRequest();
+            //xmlhttp.responseType = "arraybuffer";
+            try{
+                xmlhttp.open("POST","/login",true);
+                xmlhttp.setRequestHeader("Content-type","application/x-www-form-urlencoded");
+                xmlhttp.onreadystatechange = function() {
+                    if(xmlhttp.readyState == 4) {
+                        if(xmlhttp.getResponseHeader("login_success")=="0"){
+                            document.getElementById("status").innerHTML = "<label> 用户名/密码 错误！ </label>";
+                        }else if(xmlhttp.getResponseHeader("login_success")=="1"){
+                            document.getElementById("status").innerHTML = "<label> 登录成功，正在重定向... </label>";
+                            window.location = "/";
+                        }else {
+                            document.getElementById("status").innerHTML = "<label> 未知状态，正在重定向... </label>";
+                        }
+                    }
+                }
+                xmlhttp.send("username="+uname+"&password="+passwd);
+            }catch(except){
+                console.log(except);
+            }
+            return false; 
+        }
+
+        function toRegister(){
+            var url = "/register";
+            window.location = url;
+        }
+    </script>
+</html>

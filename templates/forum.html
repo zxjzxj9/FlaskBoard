@@ -1,0 +1,41 @@
+{% extends "basic.html" %}
+
+{% block head %}
+
+<script type="text/javascript">
+    function getTime() {
+        var elem = document.getElementById("announce");
+        elem.innerHTML = "现在时间是：" + Date();
+    }
+    window.onload=setInterval(getTime, 1000);
+</script>
+
+{% endblock %}
+
+{% block body_head %}
+<h2>
+论坛公告
+</h2>
+
+    <p id="announce">
+    </p>
+{% endblock %}
+
+{% block body %}
+<form class="form-inline" role="form">
+  <div class="form-group has-success has-feedback">
+    <label class="control-label" for="inputSuccess4"></label>
+    <input type="text" class="form-control" id="inputSuccess4" placeholder="搜索内容" >
+    <span class="glyphicon glyphicon-search form-control-feedback"></span>
+  </div>
+</form>
+
+
+{% endblock %}
+
+{% block content %}
+{% endblock %}
+
+
+{% block script %}
+{% endblock %}
