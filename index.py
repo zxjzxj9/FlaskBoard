@@ -35,9 +35,9 @@ def login():
         db = get_db()
         c = db.cursor()
         
-        #c.execute("SELECT password FROM users WHERE name = %s; ",(user,))
+        c.execute("SELECT password FROM users WHERE name = %s; ",(user,))
 
-        c.execute("SELECT password FROM users WHERE name = '%s' ;" %user)
+        #c.execute("SELECT password FROM users WHERE name = '%s' ;" %user)
 
         tmp = c.fetchone()
         print tmp
@@ -86,7 +86,20 @@ def forumtopic():
 
 @app.route("/salt", methods = ['GET', 'POST'])
 def salt():
-    pass
+    if methods == "GET":
+        db = get_db()
+        c = db.cursor()
+        uname = request.args['username']
+        cursor.execute("SELECT salt FROM users WHERE name = %s", (uname,))
+        res = cursor.fetchone()
+        resp = redirect('/')
+        if not res:
+            resp.headers['user_exist'] = '0'
+        else:
+            resp.headers['user_exist'] = '1'
+            resp.headers['user_salt'] = res[0]
+        c.close()
+        return resp
 
 if __name__ == "__main__":
     app.run(host="10.35.22.98", debug=False)
