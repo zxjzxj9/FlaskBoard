@@ -17,18 +17,18 @@
 
 <div class="container">
     <div class="form-group">
-        <form class="form-signin"  method="POST" class= "form-horizontal">
+        <form class="form-signin" class= "form-horizontal">
             <div class="row">
             <label class="col-sm-2 col-sm-offset-3">用户名</label>
             <div class="col-sm-4">
-                <input type="text" class="form-control" id="uname" name="username">
+                <input type="text" class="form-control" id="uname" name="username" >
             </div>
             </div>
 
             <br/>
 
             <div class="row">
-            <label class="col-sm-2 col-sm-offset-3">邮箱</label>
+            <label class="col-sm-2 col-sm-offset-3" >邮箱</label>
             <div class="col-sm-4">
                 <input type="text" class="form-control" id="email" name="email">
             </div>
@@ -60,6 +60,17 @@
                 <input type="password" class="form-control" id="passwd2" name="passwd2">
             </div>
             </div>
+        
+            <br/>
+            <div class="row">
+            <label class="col-sm-2 col-sm-offset-5" id="status2"></label>
+            </div>
+            <br/>
+
+            <div class="row">
+                <button type="submit" class="btn btn-primary col-sm-offset-6" onclick="check()" >注册</button>
+            </div>
+
         </form>
     </div>
 </div>
@@ -71,4 +82,96 @@
 {% endblock %}
 
 {% block script %}
+<script type="text/javascript">
+    function gensalt() {
+        // generate salt and then get the salt
+        var randstr = Math.random().toString(36).substring(2,26);
+        return randstr;
+    }
+
+    function checkuser(){
+        var statustxt = document.getElementById("status2");
+        var username = document.getElementById("username").value;
+        if(!username) {
+            statustxt.innerHTML = "<label> 用户名必须不为空！ </label>";
+            document.getElementById("uname").focus();
+            return false;
+        }
+        return true;        
+    }
+
+    function checksame(){
+        var statustxt = document.getElementById("status2");
+        var passwd = document.getElementById("passwd").value;
+        var passwd2 = document.getElementById("passwd2").value;
+        if(passwd != passwd2) {
+            statustxt.innerHTML = "<label> 密码不符合！ </label>";
+            document.getElementById("passwd").focus();
+            return false;
+        }
+        return true;        
+    }
+
+    function checkemail(){
+        var statustxt = document.getElementById("status2");
+        var email = document.getElementById("email");
+        var reg = /\w+@\w+\.\w+/g;
+        if(!reg.exec(email)) {
+            statustxt.innerHTML = "<label>邮箱格式错误！</label>";
+            email = document.getElementById("email");
+            document.getElementById("email").focus();
+            return false;
+        }
+        return true;
+    }
+
+    function check(){
+        // First check username
+        var statustxt = document.getElementById("status2");
+        var uname = document.getElementById("uname");
+        var email = document.getElementById("email");
+        var nickname = document.getElementById("nickname");
+        var passwd = document.getElementById("passwd");
+
+        if(!checksame()) return;
+        // using ajax tech, check whether the same username exists
+        var xmlhttp = new XMLHttpRequest();
+        try{
+            xmlhttp.open("GET","/register",true);
+            xmlhttp.onreadystatechange = function(){
+                if(xmlhttp.readyState == 4) {
+                    if(xmlhttp.getResponseHeader("user_exists")=="0") {
+                        xmlhttp.open("POST","/login",true); 
+                        xmlhttp.setRequestHeader("Content-type","application/x-www-form-urlencoded");
+                        xmlhttp.onreadystatechange = function() {
+                            if(xmlhttp.readyState == 4) {
+                                if(xmlhttp.getResponseHeader("reg_success")=="0"){
+                                    statustxt.innerHTML = "<label>注册成功，请查看自己的邮箱， 5秒后重定向... </label>";
+                                }else{
+                                    statustxt.innerHTML = "<label>注册失败， 5秒后重定向... </label>";
+                                }
+                            }
+                        }
+                        // code from https://github.com/Caligatio/jsSHA
+                        var shaObj = new jsSHA("SHA-1", "TEXT");
+                        var salt = gensalt();
+                        shaObj.update(passwd+salt);
+                        var hash = shaObj.getHash("HEX");
+                        xmlhttp.send("username="+uname+"&email="+email+"&nickname="+nickname+"&passwd="+passwd+"&salt="+salt);
+                    }else{
+                        var statustxt = document.getElementById("status2");
+                        statustxt.innerHTML = "<label> 用户名 已存在！ </label>";
+                    }
+                }
+            } 
+            xmlhttp.send("username="+uname);
+
+        }catch(except){
+            console.log(except);
+        }
+        return false;
+    }
+
+</script>
+
 {% endblock %}
