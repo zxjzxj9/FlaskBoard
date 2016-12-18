@@ -131,9 +131,23 @@
             //console.log(form);
             var uname = document.getElementById("uname").value;
             var passwd = document.getElementById("passwd").value;
+        
             //console.log(uname);
             //console.log(passwd);
             var xmlhttp = new XMLHttpRequest();
+
+            try{
+                xmlhttp.open("GET","/salt?username="+uname,true);
+                xmlhttp.onreadystatechange = function(){
+                    if(xmlhttp.readyState == 4) {
+                        xmlhttp.getResponseHeader("login_success")
+                    }
+                }
+
+            }catch(except){
+                console.log(except);
+            }
+
             //xmlhttp.responseType = "arraybuffer";
             try{
                 xmlhttp.open("POST","/login",true);

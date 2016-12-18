@@ -2,6 +2,8 @@ from flask import Flask, abort, request, redirect, render_template, \
                   make_response, session, g
 import psycopg2 as pg2
 import os
+import random
+import string
 
 app = Flask(__name__)
 app.secret_key = os.urandom(24)
@@ -31,7 +33,7 @@ def login():
     if request.method == "POST":
         user = request.form.get('username')
         pwd = request.form.get('password')
-        print user, pwd
+        #print user, pwd
         db = get_db()
         c = db.cursor()
         
@@ -40,7 +42,7 @@ def login():
         #c.execute("SELECT password FROM users WHERE name = '%s' ;" %user)
 
         tmp = c.fetchone()
-        print tmp
+        #print tmp
         pwd1 = tmp[0] if tmp else None
 
         if user and pwd == pwd1:
@@ -71,9 +73,51 @@ def logout():
 @app.route("/register", methods = ['GET', 'POST'])
 def register():
     if request.method == "GET":
-        return render_template("register.html", session = session)
+
+        if request.args.get("username"):
+            uname = request.args.get("username")
+            email = request.args.get("email")
+            db = get_db()
+            c = db.cursor()
+            c.execute("SELECT * FROM users WHERE name = %s;", (uname,))
+            res = c.fetchone()
+            #print res
+            resp = make_response("") #render_template("register.html", session = session))
+            resp.headers['user_exists'] = "0" if not res else "1"
+
+            c.execute("SELECT * FROM users WHERE email = %s;", (email,))
+            res = c.fetchone()
+            resp.headers['user_exists'] = resp.headers['user_exists'] if not res else "2"
+
+            c.close()
+            return resp
+
+        resp = make_response(render_template("register.html", session = session))
+        return resp
+        
     if request.method == "POST":
-        pass
+        print request.form
+        try:
+            linkurl = "".join(random.sample(string.ascii_letters,16))
+            db = get_db()
+            c = db.cursor()
+            c.execute("INSERT INTO users(name, nickname, salt, password, email, verilink, verified)" + \
+                      "VALUES (%s,%s,%s,%s,%s,%s,%s)", (request.form.get("username"),  
+                        request.form.get("nickname"),request.form.get("salt"), request.form.get("passwd"), 
+                        request.form.get("email"), linkurl, False,
+                        )
+                     )
+            db.commit()
+            c.close()
+            resp = make_response("")
+            resp.headers["reg_success"] = "0"
+            return resp
+        except Exception as e:
+            print e
+            resp = make_response("")
+            resp.headers["reg_success"] = "1"
+            return resp
+            
 
 @app.route("/forum", methods = ['GET', 'POST'])
 def forum():

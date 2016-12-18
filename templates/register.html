@@ -17,11 +17,11 @@
 
 <div class="container">
     <div class="form-group">
-        <form class="form-signin" class= "form-horizontal">
+        <form class="form-signin" class= "form-horizontal" onsubmit="return false;">
             <div class="row">
             <label class="col-sm-2 col-sm-offset-3">用户名</label>
             <div class="col-sm-4">
-                <input type="text" class="form-control" id="uname" name="username" >
+                <input type="text" class="form-control" id="uname2" name="username" >
             </div>
             </div>
 
@@ -48,7 +48,7 @@
             <div class="row">
             <label class="col-sm-2 col-sm-offset-3">密码</label>
             <div class="col-sm-4">
-                <input type="password" class="form-control" id="passwd" name="passwd">
+                <input type="password" class="form-control" id="passwd1" name="passwd">
             </div>
             </div>
 
@@ -91,10 +91,10 @@
 
     function checkuser(){
         var statustxt = document.getElementById("status2");
-        var username = document.getElementById("username").value;
+        var username = document.getElementById("uname2").value;
         if(!username) {
             statustxt.innerHTML = "<label> 用户名必须不为空！ </label>";
-            document.getElementById("uname").focus();
+            document.getElementById("uname2").focus();
             return false;
         }
         return true;        
@@ -102,8 +102,13 @@
 
     function checksame(){
         var statustxt = document.getElementById("status2");
-        var passwd = document.getElementById("passwd").value;
+        var passwd = document.getElementById("passwd1").value;
         var passwd2 = document.getElementById("passwd2").value;
+        if(!passwd) {
+            statustxt.innerHTML = "<label> 密码必须不为空！ </label>";
+            document.getElementById("passwd").focus();
+            return false;
+        }
         if(passwd != passwd2) {
             statustxt.innerHTML = "<label> 密码不符合！ </label>";
             document.getElementById("passwd").focus();
@@ -114,7 +119,7 @@
 
     function checkemail(){
         var statustxt = document.getElementById("status2");
-        var email = document.getElementById("email");
+        var email = document.getElementById("email").value;
         var reg = /\w+@\w+\.\w+/g;
         if(!reg.exec(email)) {
             statustxt.innerHTML = "<label>邮箱格式错误！</label>";
@@ -128,27 +133,32 @@
     function check(){
         // First check username
         var statustxt = document.getElementById("status2");
-        var uname = document.getElementById("uname");
-        var email = document.getElementById("email");
-        var nickname = document.getElementById("nickname");
-        var passwd = document.getElementById("passwd");
-
-        if(!checksame()) return;
+        var uname = document.getElementById("uname2").value;
+        var email = document.getElementById("email").value;
+        var nickname = document.getElementById("nick").value;
+        var passwd = document.getElementById("passwd1").value;
+        
+        if(!checkuser()) return false;
+        if(!checkemail()) return false;
+        if(!checksame()) return false;
         // using ajax tech, check whether the same username exists
         var xmlhttp = new XMLHttpRequest();
         try{
-            xmlhttp.open("GET","/register",true);
+            xmlhttp.open("GET","/register?username="+uname+"&email="+email,true);
             xmlhttp.onreadystatechange = function(){
                 if(xmlhttp.readyState == 4) {
                     if(xmlhttp.getResponseHeader("user_exists")=="0") {
-                        xmlhttp.open("POST","/login",true); 
+                        xmlhttp.open("POST","/register",true); 
                         xmlhttp.setRequestHeader("Content-type","application/x-www-form-urlencoded");
                         xmlhttp.onreadystatechange = function() {
                             if(xmlhttp.readyState == 4) {
+                                var statustxt = document.getElementById("status2");
                                 if(xmlhttp.getResponseHeader("reg_success")=="0"){
                                     statustxt.innerHTML = "<label>注册成功，请查看自己的邮箱， 5秒后重定向... </label>";
+                                    setTimeout(function(){window.location="/"}, 5000);
                                 }else{
                                     statustxt.innerHTML = "<label>注册失败， 5秒后重定向... </label>";
+                                    setTimeout(function(){window.location="/"}, 5000);
                                 }
                             }
                         }
@@ -157,14 +167,20 @@
                         var salt = gensalt();
                         shaObj.update(passwd+salt);
                         var hash = shaObj.getHash("HEX");
-                        xmlhttp.send("username="+uname+"&email="+email+"&nickname="+nickname+"&passwd="+passwd+"&salt="+salt);
-                    }else{
+                        xmlhttp.send("username="+uname+"&email="+email+"&nickname="+nickname+"&passwd="+hash+"&salt="+salt);
+                    }else if(xmlhttp.getResponseHeader("user_exists")=="1"){
                         var statustxt = document.getElementById("status2");
                         statustxt.innerHTML = "<label> 用户名 已存在！ </label>";
+                    }else if(xmlhttp.getResponseHeader("user_exists")=="2"){
+                        var statustxt = document.getElementById("status2");
+                        statustxt.innerHTML = "<label> 邮箱 已存在！ </label>";
+                    }else {
+                        var statustxt = document.getElementById("status2");
+                        statustxt.innerHTML = "<label> 未知错误！ </label>";
                     }
                 }
             } 
-            xmlhttp.send("username="+uname);
+            xmlhttp.send();
 
         }catch(except){
             console.log(except);
